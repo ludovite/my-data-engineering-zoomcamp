@@ -6,21 +6,19 @@ Docker and SQL
 
 ## Part 1. Understanding Docker images
 
-To run docker with the `python:3.13` image and an entrypoint `bash` to interact with the container :
+To run docker with the `python:3.13` image and an entrypoint `bash` to interact with the container:
 
-TODO
+```bash
+$ docker run -it --rm python:3.13 bash -c 'pip --version'
+pip 25.3 from /usr/local/lib/python3.13/site-packages/pip (python 3.13)
+```
 
-What's the version of `pip` in the image?
-
-- 25.3
-- 24.3.1
-- 24.2.1
-- 23.3.1
+This Docker image has version 25.3 of `pip`
 
 
-## Question 2. Understanding Docker networking and docker-compose
+## Part 2. Understanding Docker networking and docker-compose
 
-Given the following `docker-compose.yaml`, what is the `hostname` and `port` that pgadmin should use to connect to the postgres database?
+Given the following `docker-compose.yaml`:
 
 ```yaml
 services:
@@ -54,30 +52,24 @@ volumes:
     name: vol-pgadmin_data
 ```
 
-- postgres:5433
-- localhost:5432
-- db:5433
-- postgres:5432
-- db:5432
-
-If multiple answers are correct, select any 
+To connect/register to the postgres database,
+pgadmin should use the `hostname` and `port` like this:
+`db:5432`
 
 
 ## Prepare the Data
 
-Download the green taxi trips data for November 2025:
+Now, let’s download the green taxi trips data for November 2025
+and the dataset with zones:
 
 ```bash
-wget https://d37ci6vzurychx.cloudfront.net/trip-data/green_tripdata_2025-11.parquet
+$ wget https://d37ci6vzurychx.cloudfront.net/trip-data/green_tripdata_2025-11.parquet
+$ wget https://github.com/DataTalksClub/nyc-tlc-data/releases/download/misc/taxi_zone_lookup.csv
 ```
 
-You will also need the dataset with zones:
+## Part 3. Counting short trips
 
-```bash
-wget https://github.com/DataTalksClub/nyc-tlc-data/releases/download/misc/taxi_zone_lookup.csv
-```
-
-## Question 3. Counting short trips
+**TODO**
 
 For the trips in November 2025 (lpep_pickup_datetime between '2025-11-01' and '2025-12-01', exclusive of the upper bound), how many trips had a `trip_distance` of less than or equal to 1 mile?
 
