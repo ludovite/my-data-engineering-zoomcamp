@@ -67,50 +67,82 @@ $ wget https://d37ci6vzurychx.cloudfront.net/trip-data/green_tripdata_2025-11.pa
 $ wget https://github.com/DataTalksClub/nyc-tlc-data/releases/download/misc/taxi_zone_lookup.csv
 ```
 
+After launching the database server with the command: `docker-compose up`, these two data file are put inside SQL tables: `uv run python data-ingest.py`.
+
+Connecting to pgAdmin at `localhost:8080`, SQL requests help to resolve the following parts.
+
+
 ## Part 3. Counting short trips
 
-**TODO**
+```sql
+SELECT COUNT(*)
+FROM green_taxi_data
+WHERE 
+	lpep_pickup_datetime >= TIMESTAMP '2025-11-01'
+	AND
+	lpep_pickup_datetime <  TIMESTAMP '2025-12-01'
+	AND
+	trip_distance <= 1
+;
+```
 
-For the trips in November 2025 (lpep_pickup_datetime between '2025-11-01' and '2025-12-01', exclusive of the upper bound), how many trips had a `trip_distance` of less than or equal to 1 mile?
-
-- 7,853
-- 8,007
-- 8,254
-- 8,421
-
-
-## Question 4. Longest trip for each day
-
-Which was the pick up day with the longest trip distance? Only consider trips with `trip_distance` less than 100 miles (to exclude data errors).
-
-Use the pick up time for your calculations.
-
-- 2025-11-14
-- 2025-11-20
-- 2025-11-23
-- 2025-11-25
+In November 2025, **8,007 trips** had a `trip_distance` of less than or equal to 1 mile.
 
 
-## Question 5. Biggest pickup zone
+## Part 4. Longest trip for each day
 
-Which was the pickup zone with the largest `total_amount` (sum of all trips) on November 18th, 2025?
+```sql
+SELECT DATE(lpep_pickup_datetime), trip_distance
+FROM green_taxi_data
+WHERE trip_distance < 100
+ORDER BY trip_distance DESC
+LIMIT 1
+;
+```
 
-- East Harlem North
-- East Harlem South
-- Morningside Heights
-- Forest Hills
+The pick up day with the longest trip distance (88 miles) is **2025-11-14**.
+NB: I only considered trips with `trip_distance` less than 100 miles (to exclude data errors).
+
+
+## Part 5. Biggest pickup zone
+
+```sql
+SELECT zones."Zone", SUM(total_amount) AS "Total_Amounts"
+FROM green_taxi_data AS trips
+	INNER JOIN taxi_zone_lookup AS zones
+		ON zones."LocationID" = trips."PULocationID"
+WHERE 
+	lpep_pickup_datetime >= TIMESTAMP '2025-11-18'
+	AND
+	lpep_pickup_datetime < TIMESTAMP '2025-11-19'
+GROUP BY zones."Zone"
+ORDER BY "Total_Amounts" DESC
+LIMIT 1
+;
+```
+
+The pickup zone with the largest `total_amount` (sum of all trips) on November 18th, 2025 is **East Harlem North**.
 
 
 ## Question 6. Largest tip
 
-For the passengers picked up in the zone named "East Harlem North" in November 2025, which was the drop off zone that had the largest tip?
+```sql
+SELECT (
+	SELECT "Zone" FROM taxi_zone_lookup
+	WHERE "LocationID" = trips."DOLocationID"
+	) AS "Drop off zone"
+FROM green_taxi_data AS trips
+WHERE
+	"PULocationID" = (
+		SELECT "LocationID" FROM taxi_zone_lookup
+		WHERE "Zone" = 'East Harlem North'
+	)
+ORDER BY tip_amount DESC
+LIMIT 1
+;
+```
 
-Note: it's `tip` , not `trip`. We need the name of the zone, not the ID.
-
-- JFK Airport
-- Yorkville West
-- East Harlem North
-- LaGuardia Airport
+For the passengers picked up in the zone named "East Harlem North" in November 2025, **Yorkville West** was the drop off zone that had the largest tip.
 
 
 ## Terraform
