@@ -1,0 +1,94 @@
+services:
+  #====== BigQuery emulation ======
+  bigquery:
+    platform: linux/x86_64
+    image: ghcr.io/recidiviz/bigquery-emulator:latest
+    ports:
+      - "9050:9050"  # REST server
+      - "9060:9060"  # gRPC server
+    volumes:
+      - ./bq_data:/data
+    command: --project=${PROJECT} #--data-from-yaml=/data/data.yaml
+
+  bq-ui:
+    platform: linux/x86_64
+    image: ghcr.io/filipecaixeta/bigquery-emulator-ui:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - BIGQUERY_PROJECT_ID=${PROJECT}
+      - BIGQUERY_EMULATOR_HOST=bigquery:9050
+      - STORAGE_EMULATOR_HOST=storage-emulator:4443
+    depends_on:
+      - bigquery
+      - storage-emulator
+
+  # ===== GCP services ======
+  pubsub-emulator:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+    command: sh -c 'gcloud beta emulators pubsub start --host-port=0.0.0.0:8085'
+    ports:
+      - "8085:8085"
+    restart: unless-stopped
+
+  firestore-emulator:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+    command: sh -c 'gcloud beta emulators firestore start --host-port=0.0.0.0:8086'
+    ports:
+      - "8086:8086"
+    restart: unless-stopped
+
+  firestore-datastore-emulator:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+    environment:
+      - MINISERVE_VERSION=0.32.0
+      - MINISERVE_PATH=/usr/local/bin/miniserve
+    command:
+      - sh
+      - -c
+      - |
+        curl -L https://github.com/svenstaro/miniserve/releases/download/v$${MINISERVE_VERSION}/miniserve-$${MINISERVE_VERSION}-$(arch)-unknown-linux-gnu -o $${MINISERVE_PATH} &&
+        chmod +x $${MINISERVE_PATH} &&
+        mkdir -p /srv &&
+        $${MINISERVE_PATH} --port 9999                                              \
+          --upload-files                                                            \
+          --mkdir                                                                   \
+          --enable-tar-gz                                                           \
+          --on-duplicate-files=overwrite                                            \
+          --route-prefix /fs                                                        \
+          --header "Access-Control-Allow-Origin: *"                                 \
+          --header "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS"  \
+          --header "Access-Control-Allow-Headers: *"                                \
+          /srv &
+        gcloud beta emulators firestore start --database-mode=datastore-mode --host-port=0.0.0.0:8087
+    ports:
+      - "8087:8087"
+      - "9999:9999"
+    restart: unless-stopped
+
+  storage-emulator:
+    image: fsouza/fake-gcs-server
+    command: -scheme http -backend "filesystem" -filesystem-root "/storage" -data /data -port 4443
+    ports:
+      - "4443:4443"
+    volumes:
+      - ./gcs_data:/data
+      - ./gcs_storage:/storage
+    restart: unless-stopped
+
+  gcp-emulator-ui:
+    image: ghcr.io/drehelis/gcp-emulator-ui:main
+    ports:
+      - "9090:80"
+    environment:
+      - PUBSUB_EMULATOR_URL=pubsub-emulator:8085
+      - FIRESTORE_EMULATOR_URL=firestore-emulator:8086
+      - DATASTORE_EMULATOR_URL=firestore-datastore-emulator:8087
+      - DATASTORE_FILE_SERVER_URL=firestore-datastore-emulator:9999
+      - STORAGE_EMULATOR_URL=storage-emulator:4443
+    depends_on:
+      - pubsub-emulator
+      - firestore-emulator
+      - firestore-datastore-emulator
+      - storage-emulator
+    restart: unless-stopped
