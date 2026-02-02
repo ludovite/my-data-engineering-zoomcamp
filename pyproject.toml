@@ -14,6 +14,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "catppuccin-jupyterlab>=0.2.4",
+    "catppuccin[pygments]>=2.5.0",
     "ipywidgets>=8.1.8",
     "jupyter>=1.1.1",
     "jupyter-lsp>=2.3.0",

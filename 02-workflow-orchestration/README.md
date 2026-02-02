@@ -23,41 +23,57 @@ As a hint, Kestra makes that process really easy:
 
 Complete the quiz shown below. It's a set of 6 multiple-choice questions to test your understanding of workflow orchestration, Kestra, and ETL pipelines.
 
-1) Within the execution for `Yellow` Taxi data for the year `2020` and month `12`: what is the uncompressed file size (i.e. the output file `yellow_tripdata_2020-12.csv` of the `extract` task)?
-- 128.3 MiB
-- 134.5 MiB
-- 364.7 MiB
-- 692.6 MiB
+1) To determine the uncompressed file size (e.g., yellow_tripdata_2020-12.csv) from Kestra `extract` task after execution, the follow-up task can be added immediatly after the `extract` task.
+```yml
+  - id: get_size
+    type: io.kestra.plugin.core.storage.Size
+    uri: "{{ outputs.extract.outputFiles[render(vars.file)] }}"
+```
+Within the execution for `Yellow` Taxi data for the year `2020` and month `12`: in `Outputs` tab of `get_size` task, the field `size` is 134,481,400. So the output file `yellow_tripdata_2020-12.csv` of the `extract` task has a size of **134.5 MiB**.
 
-2) What is the rendered value of the variable `file` when the inputs `taxi` is set to `green`, `year` is set to `2020`, and `month` is set to `04` during execution?
-- `{{inputs.taxi}}_tripdata_{{inputs.year}}-{{inputs.month}}.csv` 
-- `green_tripdata_2020-04.csv`
-- `green_tripdata_04_2020.csv`
-- `green_tripdata_2020.csv`
+
+2) As the variable `file` is thus defined: 
+```yaml
+  file: "{{inputs.taxi}}_tripdata_{{inputs.year}}-{{inputs.month}}.csv"
+```
+The rendered value of the variable `file` when the inputs `taxi` is set to `green`, `year` is set to `2020`, and `month` is set to `04` during execution is **`green_tripdata_2020-04.csv`**.
+
 
 3) How many rows are there for the `Yellow` Taxi data for all CSV files in the year 2020?
-- 13,537.299
-- 24,648,499
-- 18,324,219
-- 29,430,127
+```sql
+SELECT 'Yellow Taxi' as "type", COUNT(*) as "total_rows"
+FROM yellow_tripdata
+WHERE filename LIKE '%2020%'
+;
+```
+The answer is: **24,648,499**.
+
 
 4) How many rows are there for the `Green` Taxi data for all CSV files in the year 2020?
-- 5,327,301
-- 936,199
-- 1,734,051
-- 1,342,034
+```sql
+SELECT 'Green Taxi' as "type", COUNT(*) as "total_rows"
+FROM green_tripdata
+WHERE filename LIKE '%2020%'
+;
+```
+The answer is: **1,734,051**.
 
-5) How many rows are there for the `Yellow` Taxi data for the March 2021 CSV file?
-- 1,428,092
-- 706,911
-- 1,925,152
-- 2,561,031
 
-6) How would you configure the timezone to New York in a Schedule trigger?
-- Add a `timezone` property set to `EST` in the `Schedule` trigger configuration  
-- Add a `timezone` property set to `America/New_York` in the `Schedule` trigger configuration
-- Add a `timezone` property set to `UTC-5` in the `Schedule` trigger configuration
-- Add a `location` property set to `New_York` in the `Schedule` trigger configuration  
+5) The `rowCount` output from `yellow_copy_in_to_staging_table` task shows how many rows there are inside the `Yellow` Taxi data for the March 2021 CSV file: **1,925,152**.
+
+
+6) How to configure the timezone to New York in a Schedule trigger?
+- Add a `timezone` property set to `America/New_York` or `US/Eastern` in the `Schedule` trigger configuration
+Example:
+```yml
+triggers:
+  - id: green_schedule
+    type: io.kestra.plugin.core.trigger.Schedule
+    timezone: US/Eastern
+    cron: "0 9 1 * *"
+    inputs:
+      taxi: green
+```
 
 ## Submitting the solutions
 
