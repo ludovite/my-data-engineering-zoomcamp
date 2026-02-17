@@ -49,8 +49,7 @@ models/
 Here is the lineage graph:
 
 <!-- ![lineage-int_trips_unioned](./images/lineage-int_trips_unioned.png) -->
-<<<<<<< HEAD
-<img alt="lineage-int_trips_unioned" src="./images/lineage-int_trips_unioned.png" height="50pc" >
+<img alt="lineage-int_trips_unioned" src="./images/lineage-int_trips_unioned.png" height="50%" >
 
 If you run `dbt run --select int_trips_unioned`, what models will be built?
 
