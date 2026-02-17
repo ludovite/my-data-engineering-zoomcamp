@@ -158,65 +158,20 @@ where service_type = 'Green'
 
 Create a staging model for the **For-Hire Vehicle (FHV)** trip data for 2019.
 
-1. Load the [FHV trip data for 2019](https://github.com/DataTalksClub/nyc-tlc-data/releases/tag/fhv) into your data warehouse
+1. Load the [FHV trip data for 2019](https://github.com/DataTalksClub/nyc-tlc-data/releases/tag/fhv) into your data warehouse → execute [data-fhv-ingest.py](taxi_rides_ny/data-fhv-ingest.py) Python script
 2. Create a staging model `stg_fhv_tripdata` with these requirements:
    - Filter out records where `dispatching_base_num IS NULL`
-   - Rename fields to match your project's naming conventions (e.g., `PUlocationID` → `pickup_location_id`)
+   - Rename fields to match your project's naming conventions (e.g., `PUlocationID` → `pickup_location_id`) → [stg_fhv_tripdata.sql](taxi_rides_ny/models/staging/stg_fhv_tripdata.sql) file.
 
 What is the count of records in `stg_fhv_tripdata`?
 
-- 42,084,899
-- 43,244,693
-- 22,998,722
-- 44,112,187
+Let’s query in duckdb:
+```sql
+select count(*)
+from taxi_rides_ny.prod.stg_fhv_tripdata
+;
+```
+
+→ **43,244,693**
 
 ---
-
-## Submitting the solutions
-
-- Form for submitting: <https://courses.datatalks.club/de-zoomcamp-2026/homework/hw4>
-
-=======
-
-## Learning in Public
-
-We encourage everyone to share what they learned. This is called "learning in public".
-
-Read more about the benefits [here](https://alexeyondata.substack.com/p/benefits-of-learning-in-public-and).
-
-### Example post for LinkedIn
-
-```
-🚀 Week 4 of Data Engineering Zoomcamp by @DataTalksClub complete!
-
-Just finished Module 4 - Analytics Engineering with dbt. Learned how to:
-
-✅ Build transformation models with dbt
-✅ Create staging, intermediate, and fact tables
-✅ Write tests to ensure data quality
-✅ Understand lineage and model dependencies
-✅ Analyze revenue patterns across NYC zones
-
-Transforming raw data into analytics-ready models - the T in ELT!
-
-Here's my homework solution: <LINK>
-
-Following along with this amazing free course - who else is learning data engineering?
-
-You can sign up here: https://github.com/DataTalksClub/data-engineering-zoomcamp/
-```
-
-### Example post for Twitter/X
-
-```
-📈 Module 4 of Data Engineering Zoomcamp done!
-
-- Analytics Engineering with dbt
-- Transformation models & tests
-- Data lineage & dependencies
-- NYC taxi revenue analysis
-
-My solution: <LINK>
-
-Free course by @DataTalksClub: https://github.com/DataTalksClub/data-engineering-zoomcamp/
-```
