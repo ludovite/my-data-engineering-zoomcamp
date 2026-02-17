@@ -11,24 +11,24 @@ In this homework, we'll use the dbt project in `04-analytics-engineering/taxi_ri
 After a successful build, we have models like `fct_trips`, `dim_zones`, and `fct_monthly_zone_revenue` in the warehouse:
 
 ```
- models
-├──  intermediate
-│   ├── 󰮆 int_trips.sql
-│   ├── 󰮆 int_trips_unioned.sql
-│   └──  schema.yml
-├──  marts
-│   ├── 󰮆 dim_vendors.sql
-│   ├── 󰮆 dim_zones.sql
-│   ├── 󰮆 fct_trips.sql
-│   ├──  schema.yml
-│   └──  reporting
-│       ├── 󰮆 fct_monthly_zone_revenue.sql
-│       └──  schema.yml
-└──  staging
-    ├──  schema.yml
-    ├──  sources.yml
-    ├── 󰮆 stg_green_tripdata.sql
-    └── 󰮆 stg_yellow_tripdata.sql
+models
+├── intermediate
+│   ├── int_trips.sql
+│   ├── int_trips_unioned.sql
+│   └── schema.yml
+├── marts
+│   ├── dim_vendors.sql
+│   ├── dim_zones.sql
+│   ├── fct_trips.sql
+│   ├── schema.yml
+│   └── reporting
+│       ├── fct_monthly_zone_revenue.sql
+│       └── schema.yml
+└── staging
+    ├── schema.yml
+    ├── sources.yml
+    ├── stg_green_tripdata.sql
+    └── stg_yellow_tripdata.sql
 ```
 
 ---
@@ -49,7 +49,7 @@ models/
 Here is the lineage graph:
 
 <!-- ![lineage-int_trips_unioned](./images/lineage-int_trips_unioned.png) -->
-<img alt="lineage-int_trips_unioned" src="./images/lineage-int_trips_unioned.png" height="50%" >
+<img alt="lineage-int_trips_unioned" src="./images/lineage-int_trips_unioned.png" height="350" >
 
 If you run `dbt run --select int_trips_unioned`, what models will be built?
 
