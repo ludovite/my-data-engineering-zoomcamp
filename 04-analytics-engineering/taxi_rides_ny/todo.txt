@@ -1,0 +1,5 @@
+dbt build --select stg_yellow_tripdata --target prod
+dbt build --select stg_green_tripdata --target prod
+dbt build --select int_trips_unioned --target prod
+dbt build --select int_trips --target prod
+dbt build --select fct_trips --target prod
