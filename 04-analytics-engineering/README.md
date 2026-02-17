@@ -48,21 +48,36 @@ models/
 
 Here is the lineage graph:
 
-<!-- ![lineage-int_trips_unioned](./images/lineage-int_trips_unioned.png) -->
 <img alt="lineage-int_trips_unioned" src="./images/lineage-int_trips_unioned.png" height="350" >
 
-If you run `dbt run --select int_trips_unioned`, what models will be built?
+If I run `dbt run --select int_trips_unioned`, what models will be built?
 
-- ~`stg_green_tripdata`, `stg_yellow_tripdata`, and `int_trips_unioned` (upstream dependencies)~
-- ~Any model with upstream and downstream dependencies to `int_trips_unioned`~
-- `int_trips_unioned` only
-- ~`int_trips_unioned`, `int_trips`, and `fct_trips` (downstream dependencies)~
+- ~`stg_green_tripdata`, `stg_yellow_tripdata`, and `int_trips_unioned` (upstream dependencies)~ → I should pass option `--select +int_trips_unioned`
+- ~Any model with upstream and downstream dependencies to `int_trips_unioned`~ → I should pass option `--select +int_trips_unioned+`
+- **`int_trips_unioned` only**
+- ~`int_trips_unioned`, `int_trips`, and `fct_trips` (downstream dependencies)~ → `fct_trips` is not in the lineage graph.
+
+Verification:
+```bash
+$ dbt run --target prod --select int_trips_unioned
+
+Concurrency: 1 threads (target='prod')
+
+1 of 1 START sql table model prod.int_trips_unioned ............................ [RUN]
+1 of 1 OK created sql table model prod.int_trips_unioned ....................... [OK in 7.74s]
+
+Finished running 1 table model in 0 hours 0 minutes and 7.83 seconds (7.83s).
+
+Completed successfully
+
+Done. PASS=1 WARN=0 ERROR=0 SKIP=0 NO-OP=0 TOTAL=1
+```
 
 ---
 
 ### Question 2. dbt Tests
 
-You've configured a generic test like this in your `schema.yml`:
+Added a generic test in `schema.yml`:
 
 ```yaml
 columns:
@@ -74,14 +89,11 @@ columns:
             quote: false
 ```
 
-Your model `fct_trips` has been running successfully for months. A new value `6` now appears in the source data.
+The model `fct_trips` has been running successfully for months. A new value `6` now appears in the source data.
 
-What happens when you run `dbt test --select fct_trips`?
+What happens when running `dbt test --select fct_trips`?
 
-- dbt will skip the test because the model didn't change
-- dbt will fail the test, returning a non-zero exit code
-- dbt will pass the test with a warning about the new value
-- dbt will update the configuration to include the new value
+- dbt will **fail the test**, returning a non-zero exit code
 
 ---
 
@@ -89,12 +101,15 @@ What happens when you run `dbt test --select fct_trips`?
 
 After running your dbt project, query the `fct_monthly_zone_revenue` model.
 
+```sql
+select count(*)
+from taxi_rides_ny.prod.fct_monthly_zone_revenue
+;
+```
+
 What is the count of records in the `fct_monthly_zone_revenue` model?
 
-- 12,998
-- 14,120
-- 12,184
-- 15,421
+- **12,184**
 
 ---
 
@@ -102,12 +117,23 @@ What is the count of records in the `fct_monthly_zone_revenue` model?
 
 Using the `fct_monthly_zone_revenue` table, find the pickup zone with the **highest total revenue** (`revenue_monthly_total_amount`) for **Green** taxi trips in 2020.
 
+```sql
+select pickup_zone
+  , sum(revenue_monthly_total_amount)
+    as total_green_revenue_2020
+from taxi_rides_ny.prod.fct_monthly_zone_revenue
+where 
+  service_type='Green'
+  and year(revenue_month) = 2020
+group by pickup_zone
+order by total_green_revenue_2020 desc
+limit 1
+;
+```
+
 Which zone had the highest revenue?
 
-- East Harlem North
-- Morningside Heights
-- East Harlem South
-- Washington Heights South
+- **East Harlem North** for a total of $1,817,339.75
 
 ---
 
@@ -115,10 +141,16 @@ Which zone had the highest revenue?
 
 Using the `fct_monthly_zone_revenue` table, what is the **total number of trips** (`total_monthly_trips`) for Green taxis in October 2019?
 
-- 500,234
-- 350,891
-- 384,624
-- 421,509
+```sql
+select sum(total_monthly_trips) as total_trip
+from taxi_rides_ny.prod.fct_monthly_zone_revenue
+where service_type = 'Green'
+  and revenue_month >= '2019-10-01'
+  and revenue_month <  '2019-11-01'
+;
+```
+
+- **384,624**
 
 ---
 
