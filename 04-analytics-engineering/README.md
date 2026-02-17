@@ -8,7 +8,28 @@ In this homework, we'll use the dbt project in `04-analytics-engineering/taxi_ri
 2. Loaded the Green and Yellow taxi data for 2019-2020 into a duckdb database (as a warehouse)
 3. Ran `dbt build --target prod` to create all models and run tests
 
-After a successful build, you should have models like `fct_trips`, `dim_zones`, and `fct_monthly_zone_revenue` in your warehouse.
+After a successful build, we have models like `fct_trips`, `dim_zones`, and `fct_monthly_zone_revenue` in the warehouse:
+
+```
+ models
+├──  intermediate
+│   ├── 󰮆 int_trips.sql
+│   ├── 󰮆 int_trips_unioned.sql
+│   └──  schema.yml
+├──  marts
+│   ├── 󰮆 dim_vendors.sql
+│   ├── 󰮆 dim_zones.sql
+│   ├── 󰮆 fct_trips.sql
+│   ├──  schema.yml
+│   └──  reporting
+│       ├── 󰮆 fct_monthly_zone_revenue.sql
+│       └──  schema.yml
+└──  staging
+    ├──  schema.yml
+    ├──  sources.yml
+    ├── 󰮆 stg_green_tripdata.sql
+    └── 󰮆 stg_yellow_tripdata.sql
+```
 
 ---
 
@@ -25,12 +46,17 @@ models/
     └── int_trips_unioned.sql (depends on stg_green_tripdata & stg_yellow_tripdata)
 ```
 
+Here is the lineage graph:
+
+<!-- ![lineage-int_trips_unioned](./images/lineage-int_trips_unioned.png) -->
+<img alt="lineage-int_trips_unioned" src="./images/lineage-int_trips_unioned.png" height="100" >
+
 If you run `dbt run --select int_trips_unioned`, what models will be built?
 
-- `stg_green_tripdata`, `stg_yellow_tripdata`, and `int_trips_unioned` (upstream dependencies)
-- Any model with upstream and downstream dependencies to `int_trips_unioned`
+- ~`stg_green_tripdata`, `stg_yellow_tripdata`, and `int_trips_unioned` (upstream dependencies)~
+- ~Any model with upstream and downstream dependencies to `int_trips_unioned`~
 - `int_trips_unioned` only
-- `int_trips_unioned`, `int_trips`, and `fct_trips` (downstream dependencies)
+- ~`int_trips_unioned`, `int_trips`, and `fct_trips` (downstream dependencies)~
 
 ---
 
