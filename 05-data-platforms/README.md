@@ -1,15 +1,17 @@
-# Module 5 Homework: Data Platforms with Bruin
+# Module 5: Data Platforms with Bruin
 
-In this homework, we'll use Bruin to build a complete data pipeline, from ingestion to reporting.
+In this homework, we used Bruin to build a complete NYC taxi data pipeline, from ingestion to reporting.
 
-## Setup
+## Setup. Bruin poipeline with AI-assisted Workflow
 
-1. Install Bruin CLI: `curl -LsSf https://getbruin.com/install/cli | sh`
-2. Initialize the zoomcamp template: `bruin init zoomcamp my-pipeline`
-3. Configure your `.bruin.yml` with a DuckDB connection
-4. Follow the tutorial in the [main module README](../../../05-data-platforms/)
+For the best learning experience, I considered a hybrid approach where I did the initial setup myself, then let AI help with more complex parts, as described in this [tutoriel](https://github.com/bruin-data/bruin/tree/main/templates/zoomcamp#45-ai-assisted-workflow).
 
-After completing the setup, you should have a working NYC taxi data pipeline.
+1. **I did**: Install CLI, run `bruin init`, explore the generated files
+2. **AI helps**: Configure connections, explain materialization strategies
+3. **I did**: Create a first simple asset (e.g., the seed CSV)
+4. **AI helps**: Build the Python ingestion and complex SQL transformations
+5. **I did**: Run and validate, inspect the data
+6. **AI helps**: Debug issues, add quality checks, optimize
 
 ---
 
@@ -17,27 +19,40 @@ After completing the setup, you should have a working NYC taxi data pipeline.
 
 In a Bruin project, what are the required files/directories?
 
-- `bruin.yml` and `assets/`
-- `.bruin.yml` and `pipeline.yml` (assets can be anywhere)
-- `.bruin.yml` and `pipeline/` with `pipeline.yml` and `assets/`
-- `pipeline.yml` and `assets/` only
+- **`.bruin.yml` and `pipeline/` with `pipeline.yml` and `assets/`**
 
+```
+├── .bruin.yml
+├── .gitignore
+├── README.md
+└── pipeline
+    ├── pipeline.yml
+    └── assets
+        ├── ingestion
+        │   ├── payment_lookup.asset.yml
+        │   ├── payment_lookup.csv
+        │   ├── requirements.txt
+        │   ├── trips.py
+        │   └── __pycache__
+        │       └── trips.cpython-311.pyc
+        ├── reports
+        │   └── trips_report.sql
+        └── staging
+            └── trips.sql
+```
 ---
 
 ### Question 2. Materialization Strategies
 
-You're building a pipeline that processes NYC taxi data organized by month based on `pickup_datetime`. Which incremental strategy is best for processing a specific interval period by deleting and inserting data for that time period?
+Building a pipeline that processes NYC taxi data organized by month based on `pickup_datetime`. Which incremental strategy is best for processing a specific interval period by deleting and inserting data for that time period?
 
-- `append` - always add new rows
-- `replace` - truncate and rebuild entirely
-- `time_interval` - incremental based on a time column
-- `view` - create a virtual table only
+- **`time_interval` − incremental based on a time column.**
 
 ---
 
 ### Question 3. Pipeline Variables
 
-You have the following variable defined in `pipeline.yml`:
+Here is the following variable defined in `pipeline.yml`:
 
 ```yaml
 variables:
@@ -48,12 +63,9 @@ variables:
     default: ["yellow", "green"]
 ```
 
-How do you override this when running the pipeline to only process yellow taxis?
+How to override variable this when running the pipeline to only process yellow taxis?
 
-- `bruin run --taxi-types yellow`
-- `bruin run --var taxi_types=yellow`
-- `bruin run --var 'taxi_types=["yellow"]'`
-- `bruin run --set taxi_types=["yellow"]`
+- **`bruin run --var 'taxi_types=["yellow"]'`**
 
 ---
 
@@ -61,10 +73,7 @@ How do you override this when running the pipeline to only process yellow taxis?
 
 You've modified the `ingestion/trips.py` asset and want to run it plus all downstream assets. Which command should you use?
 
-- `bruin run ingestion.trips --all`
-- `bruin run ingestion/trips.py --downstream`
-- `bruin run pipeline/trips.py --recursive`
-- `bruin run --select ingestion.trips+`
+- **`bruin run ingestion/trips.py --downstream`**
 
 ---
 
@@ -72,10 +81,7 @@ You've modified the `ingestion/trips.py` asset and want to run it plus all downs
 
 You want to ensure the `pickup_datetime` column in your trips table never has NULL values. Which quality check should you add to your asset definition?
 
-- `name: unique`
-- `name: not_null`
-- `name: positive`
-- `name: accepted_values, value: [not_null]`
+- **`name: not_null`**
 
 ---
 
@@ -83,10 +89,7 @@ You want to ensure the `pickup_datetime` column in your trips table never has NU
 
 After building your pipeline, you want to visualize the dependency graph between assets. Which Bruin command should you use?
 
-- `bruin graph`
-- `bruin dependencies`
-- `bruin lineage`
-- `bruin show`
+- **`bruin lineage`**
 
 ---
 
@@ -94,58 +97,7 @@ After building your pipeline, you want to visualize the dependency graph between
 
 You're running a Bruin pipeline for the first time on a new DuckDB database. What flag should you use to ensure tables are created from scratch?
 
-- `--create`
-- `--init`
-- `--full-refresh`
-- `--truncate`
+- **`--full-refresh`**
 
 ---
 
-## Submitting the solutions
-
-- Form for submitting: <https://courses.datatalks.club/de-zoomcamp-2026/homework/hw5>
-
-=======
-
-## Learning in Public
-
-We encourage everyone to share what they learned. This is called "learning in public".
-
-Read more about the benefits [here](https://alexeyondata.substack.com/p/benefits-of-learning-in-public-and).
-
-### Example post for LinkedIn
-
-```
-🚀 Week 5 of Data Engineering Zoomcamp by @DataTalksClub complete!
-
-Just finished Module 5 - Data Platforms with Bruin. Learned how to:
-
-✅ Build end-to-end ELT pipelines with Bruin
-✅ Configure environments and connections
-✅ Use materialization strategies for incremental processing
-✅ Add data quality checks to ensure data integrity
-✅ Deploy pipelines from local to cloud (BigQuery)
-
-Modern data platforms in a single CLI tool - no vendor lock-in!
-
-Here's my homework solution: <LINK>
-
-Following along with this amazing free course - who else is learning data engineering?
-
-You can sign up here: https://github.com/DataTalksClub/data-engineering-zoomcamp/
-```
-
-### Example post for Twitter/X
-
-```
-📊 Module 5 of Data Engineering Zoomcamp done!
-
-- Data Platforms with Bruin
-- End-to-end ELT pipelines
-- Data quality & lineage
-- Deployment to BigQuery
-
-My solution: <LINK>
-
-Free course by @DataTalksClub: https://github.com/DataTalksClub/data-engineering-zoomcamp/
-```
