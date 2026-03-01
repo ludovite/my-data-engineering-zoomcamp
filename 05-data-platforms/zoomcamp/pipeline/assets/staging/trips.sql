@@ -1,101 +1,147 @@
 /* @bruin
+name: staging.trips
+type: duckdb.sql
 
-# Docs:
-# - Materialization: https://getbruin.com/docs/bruin/assets/materialization
-# - Quality checks (built-ins): https://getbruin.com/docs/bruin/quality/available_checks
-# - Custom checks: https://getbruin.com/docs/bruin/quality/custom
-
-# TODO: Set the asset name (recommended: staging.trips).
-name: TODO_SET_ASSET_NAME
-# TODO: Set platform type.
-# Docs: https://getbruin.com/docs/bruin/assets/sql
-# suggested type: duckdb.sql
-type: TODO
-
-# TODO: Declare dependencies so `bruin run ... --downstream` and lineage work.
-# Examples:
-# depends:
-#   - ingestion.trips
-#   - ingestion.payment_lookup
 depends:
-  - TODO_DEP_1
-  - TODO_DEP_2
+  - ingestion.trips
+  - ingestion.payment_lookup
 
-# TODO: Choose time-based incremental processing if the dataset is naturally time-windowed.
-# - This module expects you to use `time_interval` to reprocess only the requested window.
 materialization:
-  # What is materialization?
-  # Materialization tells Bruin how to turn your SELECT query into a persisted dataset.
-  # Docs: https://getbruin.com/docs/bruin/assets/materialization
-  #
-  # Materialization "type":
-  # - table: persisted table
-  # - view: persisted view (if the platform supports it)
   type: table
-  # TODO: set a materialization strategy.
-  # Docs: https://getbruin.com/docs/bruin/assets/materialization
-  # suggested strategy: time_interval
-  #
-  # Incremental strategies (what does "incremental" mean?):
-  # Incremental means you update only part of the destination instead of rebuilding everything every run.
-  # In Bruin, this is controlled by `strategy` plus keys like `incremental_key` and `time_granularity`.
-  #
-  # Common strategies you can choose from (see docs for full list):
-  # - create+replace (full rebuild)
-  # - truncate+insert (full refresh without drop/create)
-  # - append (insert new rows only)
-  # - delete+insert (refresh partitions based on incremental_key values)
-  # - merge (upsert based on primary key)
-  # - time_interval (refresh rows within a time window)
-  strategy: TODO
-  # TODO: set incremental_key to your event time column (DATE or TIMESTAMP).
-  incremental_key: TODO_SET_INCREMENTAL_KEY
-  # TODO: choose `date` vs `timestamp` based on the incremental_key type.
-  time_granularity: TODO_SET_GRANULARITY
+  strategy: time_interval
+  incremental_key: pickup_datetime
+  time_granularity: timestamp
 
-# TODO: Define output columns, mark primary keys, and add a few checks.
 columns:
-  - name: TODO_pk1
-    type: TODO
-    description: TODO
+  - name: taxi_type
+    type: string
+    description: Taxi type (yellow or green)
     primary_key: true
-    nullable: false
     checks:
       - name: not_null
-  - name: TODO_metric
-    type: TODO
-    description: TODO
+  - name: pickup_datetime
+    type: timestamp
+    description: Trip pickup datetime
+    primary_key: true
+    checks:
+      - name: not_null
+  - name: dropoff_datetime
+    type: timestamp
+    description: Trip dropoff datetime
+    checks:
+      - name: not_null
+  - name: pickup_location_id
+    type: integer
+    description: TLC pickup zone ID
+    primary_key: true
+    checks:
+      - name: not_null
+  - name: dropoff_location_id
+    type: integer
+    description: TLC dropoff zone ID
+    primary_key: true
+    checks:
+      - name: not_null
+  - name: fare_amount
+    type: float
+    description: Base metered fare in USD
+    primary_key: true
+    checks:
+      - name: not_null
+      - name: non_negative
+  - name: payment_type
+    type: integer
+    description: Numeric payment type identifier
+  - name: payment_type_name
+    type: string
+    description: Human-readable payment type, joined from payment_lookup
+  - name: passenger_count
+    type: float
+    description: Number of passengers
+  - name: trip_distance
+    type: float
+    description: Trip distance in miles
     checks:
       - name: non_negative
+  - name: tip_amount
+    type: float
+    description: Tip amount in USD
+    checks:
+      - name: non_negative
+  - name: total_amount
+    type: float
+    description: Total amount charged in USD
+    checks:
+      - name: non_negative
+  - name: extracted_at
+    type: timestamp
+    description: UTC timestamp when the raw record was extracted
 
-# TODO: Add one custom check that validates a staging invariant (uniqueness, ranges, etc.)
-# Docs: https://getbruin.com/docs/bruin/quality/custom
 custom_checks:
-  - name: TODO_custom_check_name
-    description: TODO
+  - name: no_dropoff_before_pickup
+    description: Dropoff datetime must not be earlier than pickup datetime
     query: |
-      -- TODO: return a single scalar (COUNT(*), etc.) that should match `value`
-      SELECT 0
+      SELECT COUNT(*)
+      FROM staging.trips
+      WHERE dropoff_datetime < pickup_datetime
     value: 0
 
 @bruin */
 
--- TODO: Write the staging SELECT query.
---
--- Purpose of staging:
--- - Clean and normalize schema from ingestion
--- - Deduplicate records (important if ingestion uses append strategy)
--- - Enrich with lookup tables (JOINs)
--- - Filter invalid rows (null PKs, negative values, etc.)
---
--- Why filter by {{ start_datetime }} / {{ end_datetime }}?
--- When using `time_interval` strategy, Bruin:
---   1. DELETES rows where `incremental_key` falls within the run's time window
---   2. INSERTS the result of your query
--- Therefore, your query MUST filter to the same time window so only that subset is inserted.
--- If you don't filter, you'll insert ALL data but only delete the window's data = duplicates.
-
-SELECT *
-FROM ingestion.trips
-WHERE pickup_datetime >= '{{ start_datetime }}'
-  AND pickup_datetime < '{{ end_datetime }}'
+WITH ranked AS (
+    SELECT
+        taxi_type,
+        pickup_datetime,
+        dropoff_datetime,
+        CAST(PULocationID AS INTEGER)   AS pickup_location_id,
+        CAST(DOLocationID AS INTEGER)   AS dropoff_location_id,
+        CAST(payment_type AS INTEGER)   AS payment_type,
+        passenger_count,
+        trip_distance,
+        fare_amount,
+        extra,
+        mta_tax,
+        tip_amount,
+        tolls_amount,
+        improvement_surcharge,
+        total_amount,
+        congestion_surcharge,
+        extracted_at,
+        ROW_NUMBER() OVER (
+            PARTITION BY
+                pickup_datetime,
+                dropoff_datetime,
+                PULocationID,
+                DOLocationID,
+                fare_amount
+            ORDER BY extracted_at DESC
+        ) AS rn
+    FROM ingestion.trips
+    WHERE pickup_datetime >= '{{ start_datetime }}'
+      AND pickup_datetime < '{{ end_datetime }}'
+      AND pickup_datetime IS NOT NULL
+      AND fare_amount >= 0
+)
+SELECT
+    r.taxi_type,
+    r.pickup_datetime,
+    r.dropoff_datetime,
+    r.pickup_location_id,
+    r.dropoff_location_id,
+    r.payment_type,
+    p.payment_type_name,
+    r.passenger_count,
+    r.trip_distance,
+    r.fare_amount,
+    r.extra,
+    r.mta_tax,
+    r.tip_amount,
+    r.tolls_amount,
+    r.improvement_surcharge,
+    r.total_amount,
+    r.congestion_surcharge,
+    r.extracted_at
+FROM ranked r
+LEFT JOIN ingestion.payment_lookup p
+    ON r.payment_type = p.payment_type_id
+WHERE r.rn = 1
