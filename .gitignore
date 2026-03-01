@@ -271,7 +271,11 @@ profiles.yml
 # Data files for DuckDB
 data/green_tripdata/
 data/yellow_tripdata/
+*.db
 data/
 *.duckdb
 *.duckdb.wal
 .duckdb_temp/
+
+# bruin
+.bruin.yml
