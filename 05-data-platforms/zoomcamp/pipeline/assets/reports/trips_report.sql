@@ -62,10 +62,10 @@ SELECT
     taxi_type,
     COALESCE(payment_type_name, 'unknown') AS payment_type_name,
     COUNT(*)                        AS trip_count,
-    SUM(total_amount)               AS total_revenue,
-    AVG(fare_amount)                AS avg_fare_amount,
-    AVG(trip_distance)              AS avg_trip_distance,
-    AVG(tip_amount)                 AS avg_tip_amount
+    ROUND(SUM(total_amount), 2)     AS total_revenue,
+    ROUND(AVG(fare_amount), 2)      AS avg_fare_amount,
+    ROUND(AVG(trip_distance), 2)    AS avg_trip_distance,
+    ROUND(AVG(tip_amount), 2)       AS avg_tip_amount
 FROM staging.trips
 WHERE pickup_datetime >= '{{ start_datetime }}'
   AND pickup_datetime < '{{ end_datetime }}'
