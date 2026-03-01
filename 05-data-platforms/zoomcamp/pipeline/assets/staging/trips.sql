@@ -65,14 +65,10 @@ columns:
       - name: non_negative
   - name: tip_amount
     type: float
-    description: Tip amount in USD
-    checks:
-      - name: non_negative
+    description: Tip amount in USD (can be negative for refunds)
   - name: total_amount
     type: float
-    description: Total amount charged in USD
-    checks:
-      - name: non_negative
+    description: Total amount charged in USD (can be negative for refunds)
   - name: extracted_at
     type: timestamp
     description: UTC timestamp when the raw record was extracted
@@ -93,9 +89,9 @@ WITH ranked AS (
         taxi_type,
         pickup_datetime,
         dropoff_datetime,
-        CAST(PULocationID AS INTEGER)   AS pickup_location_id,
-        CAST(DOLocationID AS INTEGER)   AS dropoff_location_id,
-        CAST(payment_type AS INTEGER)   AS payment_type,
+        CAST(pu_location_id AS INTEGER)  AS pickup_location_id,
+        CAST(do_location_id AS INTEGER)  AS dropoff_location_id,
+        CAST(payment_type AS INTEGER)    AS payment_type,
         passenger_count,
         trip_distance,
         fare_amount,
@@ -111,8 +107,8 @@ WITH ranked AS (
             PARTITION BY
                 pickup_datetime,
                 dropoff_datetime,
-                PULocationID,
-                DOLocationID,
+                pu_location_id,
+                do_location_id,
                 fare_amount
             ORDER BY extracted_at DESC
         ) AS rn
@@ -121,6 +117,7 @@ WITH ranked AS (
       AND pickup_datetime < '{{ end_datetime }}'
       AND pickup_datetime IS NOT NULL
       AND fare_amount >= 0
+      AND dropoff_datetime >= pickup_datetime
 )
 SELECT
     r.taxi_type,
