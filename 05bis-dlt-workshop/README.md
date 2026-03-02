@@ -202,7 +202,8 @@ Answer: **$6,063.41**
 
 ### Annex: Asking Claude Code to find the answers and reporting in a marimo notebook
 
-Prompt:
+#### Prompt
+
 ```txt
 ❯ Create a marimo notebook that gives an answer to these questions:
   1. What is the start date and end date of the dataset?
@@ -212,10 +213,14 @@ Prompt:
   Reference: https://dlthub.com/docs/general-usage/dataset-access/marimo
 ```
 
-Notes: Because the db schema has the dev_mode timestamp suffix, Claude code had to re-run the pipeline without dev_mode first to get a clean schema name.
+#### Notes
+
+Because the db schema has the dev_mode timestamp suffix, Claude code had to re-run the pipeline without dev_mode first to get a clean schema name.
 Then it could correct a few bugs from its first attempts. I asked it to get back to a dev pipeline.
 
-Results: the generated marimo file is [here](./homework.py). Inside the chat window, this results table was printed:
+#### Results
+
+The generated marimo file is [here](./homework.py). Inside the chat window, this results table was printed:
 ```
 ● Done. The marimo notebook is at homework.py. Here are the verified answers:
 
