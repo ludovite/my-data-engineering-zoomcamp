@@ -247,3 +247,6 @@ logs/*.log
 *.py[cod]
 logs/queries
 logs/
+
+# Spark
+spark.log
