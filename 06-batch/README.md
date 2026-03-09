@@ -165,6 +165,7 @@ LIMIT 5
 Using the zone lookup data and the Yellow November 2025 data, we can find the name of the LEAST frequent pickup location Zone:
 
 > Governor's Island/Ellis Island/Liberty Island
+
 > Arden Heights
 
 ---
