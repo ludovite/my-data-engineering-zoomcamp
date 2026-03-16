@@ -1,6 +1,6 @@
-# Homework
+# Module 7 - Stream Processing
 
-In this homework, we'll practice streaming with Kafka (Redpanda) and PyFlink.
+We’ll practice streaming with Kafka (Redpanda) and PyFlink.
 
 We use Redpanda, a drop-in replacement for Kafka. It implements the same
 protocol, so any Kafka client library works with it unchanged.
@@ -12,12 +12,11 @@ For this homework we will be using Green Taxi Trip data from October 2025:
 
 ## Setup
 
-We'll use the same infrastructure from the [workshop](../../../07-streaming/workshop/).
+We'll use the same infrastructure from the [workshop](https://github.com/DataTalksClub/data-engineering-zoomcamp/tree/main/07-streaming/workshop).
 
 Follow the setup instructions: build the Docker image, start the services:
 
 ```bash
-cd 07-streaming/workshop/
 docker compose build
 docker compose up -d
 ```
@@ -28,15 +27,6 @@ This gives us:
 - Flink Job Manager at http://localhost:8081
 - Flink Task Manager
 - PostgreSQL on `localhost:5432` (user: `postgres`, password: `postgres`)
-
-If you previously ran the workshop and have old containers/volumes,
-do a clean start:
-
-```bash
-docker compose down -v
-docker compose build
-docker compose up -d
-```
 
 Note: the container names (like `workshop-redpanda-1`) assume the
 directory is called `workshop`. If you renamed it, adjust accordingly.
@@ -51,6 +41,8 @@ docker exec -it workshop-redpanda-1 rpk version
 ```
 
 What version of Redpanda are you running?
+
+> `rpk version: v25.3.9`
 
 
 ## Question 2. Sending data to Redpanda
