@@ -8,6 +8,7 @@ dependencies = [
     "dbt-duckdb>=1.10.0",
     "dlt[workspace]>=1.22.2",
     "google-cloud-storage>=3.9.0",
+    "kafka-python>=2.3.0",
     "pandas>=3.0.0",
     "psycopg2-binary>=2.9.11",
     "pyarrow>=23.0.0",
