@@ -28,6 +28,7 @@ dev = [
     "jupyterlab-lsp>=5.2.0",
     "jupyterlab-pygments>=0.3.0",
     "marimo[recommended]>=0.20.2",
+    "pgcli>=4.4.0",
     "python-lsp-ruff>=2.3.0",
     "python-lsp-server[all]>=1.14.0",
     "websockets>=16.0",

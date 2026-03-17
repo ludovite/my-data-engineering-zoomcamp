@@ -14,7 +14,7 @@ For this homework we will be using Green Taxi Trip data from October 2025:
 
 We'll use the same infrastructure from the [workshop](https://github.com/DataTalksClub/data-engineering-zoomcamp/tree/main/07-streaming/workshop).
 
-Follow the setup instructions: build the Docker image, start the services:
+Follow the setup instructions: build the [Docker image](./docker-compose.yml), start the services:
 
 ```bash
 docker compose build
@@ -28,8 +28,13 @@ This gives us:
 - Flink Task Manager
 - PostgreSQL on `localhost:5432` (user: `postgres`, password: `postgres`)
 
-Note: the container names (like `workshop-redpanda-1`) assume the
-directory is called `workshop`. If you renamed it, adjust accordingly.
+Some python task use a refactored `Ride` class from the [models file](./src/models.py). It contains:
+
+- some usefull columns from the dataset (see Question 2);
+- a serialization to JSON data as a method;
+- a deserialization from JSON.
+
+Access needs to add `src/` folder to the PYTHONPATH. I recommend [direnv](https://direnv.net/) utility.
 
 
 ## Question 1. Redpanda version
@@ -37,7 +42,7 @@ directory is called `workshop`. If you renamed it, adjust accordingly.
 Run `rpk version` inside the Redpanda container:
 
 ```bash
-docker exec -it workshop-redpanda-1 rpk version
+docker exec -it 07-streaming-redpanda-1 rpk version
 ```
 
 What version of Redpanda are you running?
@@ -50,7 +55,7 @@ What version of Redpanda are you running?
 Create a topic called `green-trips`:
 
 ```bash
-docker exec -it workshop-redpanda-1 rpk topic create green-trips
+docker exec -it 07-streaming-redpanda-1 rpk topic create green-trips
 ```
 
 Now write a producer to send the green taxi data to this topic.
@@ -67,30 +72,19 @@ Read the parquet file and keep only these columns:
 - `total_amount`
 
 Convert each row to a dictionary and send it to the `green-trips` topic.
-You'll need to handle the datetime columns - convert them to strings
+You’ll need to handle the datetime columns - convert them to strings
 before serializing to JSON.
 
 Measure the time it takes to send the entire dataset and flush:
-
-```python
-from time import time
-
-t0 = time()
-
-# send all rows ...
-
-producer.flush()
-
-t1 = time()
-print(f'took {(t1 - t0):.2f} seconds')
-```
+Code [here](./src/producers/producer.py).
 
 How long did it take to send the data?
 
-- 10 seconds
-- 60 seconds
-- 120 seconds
-- 300 seconds
+```python3
+uv run python src/producers/producer.py
+```
+
+> 10 seconds
 
 
 ## Question 3. Consumer - trip distance
@@ -101,11 +95,13 @@ Write a Kafka consumer that reads all messages from the `green-trips` topic
 Count how many trips have a `trip_distance` greater than 5.0 kilometers.
 
 How many trips have `trip_distance` > 5?
+Code [here](./src/consumers/consumer_trip_distance.py).
 
-- 6506
-- 7506
-- 8506
-- 9506
+```python3
+uv run python src/consumers/consumer_trip_distance.py
+```
+
+> 8,506
 
 
 ## Part 2: PyFlink (Questions 4-6)
