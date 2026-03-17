@@ -19,8 +19,8 @@ class Ride:
 
     lpep_pickup_datetime: str
     lpep_dropoff_datetime: str
-    PU_locationID: int
-    DO_locationID: int
+    PU_location_id: int
+    DO_location_id: int
     passenger_count: int | None  # this feature has some NaN values
     trip_distance: float
     tip_amount: float
@@ -35,8 +35,8 @@ class Ride:
         return cls(
             lpep_pickup_datetime=str(row["lpep_pickup_datetime"]),
             lpep_dropoff_datetime=str(row["lpep_dropoff_datetime"]),
-            PU_locationID=int(row["PULocationID"]),
-            DO_locationID=int(row["DOLocationID"]),
+            PU_location_id=int(row["PULocationID"]),
+            DO_location_id=int(row["DOLocationID"]),
             passenger_count=int(passenger_count_value)
             if pd.notna(passenger_count_value)
             else None,

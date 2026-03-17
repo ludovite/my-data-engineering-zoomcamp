@@ -36,6 +36,10 @@ services:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./aggregated_pickup_init.sql:/docker-entrypoint-initdb.d/aggregated_pickup_init.sql
+      - ./aggregated_streak_init.sql:/docker-entrypoint-initdb.d/aggregated_streak_init.sql
+      - ./aggregated_tips_init.sql:/docker-entrypoint-initdb.d/aggregated_tips_init.sql
     ports:
       - "5432:5432"
 

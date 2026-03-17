@@ -9,9 +9,9 @@ def create_events_source_kafka(t_env):
             PU_location_id INTEGER,
             DO_location_id INTEGER,
             passenger_count INTEGER,
-            trip_distance DOUBLE,
-            tip_amount DOUBLE,
-            total_amount DOUBLE,
+            trip_distance DOUBLE PRECISION,
+            tip_amount DOUBLE PRECISION,
+            total_amount DOUBLE PRECISION,
             lpep_pickup_datetime VARCHAR,
             lpep_dropoff_datetime VARCHAR,
             event_timestamp AS TO_TIMESTAMP(lpep_pickup_datetime, 'yyyy-MM-dd HH:mm:ss'),
@@ -29,14 +29,13 @@ def create_events_source_kafka(t_env):
     return table_name
 
 
-def create_aggregated_pickup_sink(t_env):
-    table_name = "aggregated_pickup"
+def create_aggregated_tips_sink(t_env):
+    table_name = "aggregated_tips"
     sink_ddl = f"""
         CREATE TABLE {table_name} (
             window_start TIMESTAMP(3),
-            PU_location_id INT,
-            num_trips BIGINT,
-            PRIMARY KEY (window_start, PU_location_id) NOT ENFORCED
+            total_tips DOUBLE PRECISION,
+            PRIMARY KEY (window_start) NOT ENFORCED
         ) WITH (
             'connector' = 'jdbc',
             'url' = 'jdbc:postgresql://postgres:5432/postgres',
@@ -60,20 +59,20 @@ def log_aggregation():
 
     try:
         source_table = create_events_source_kafka(t_env)
-        # t_env.execute_sql(f"""SELECT * FROM {source_table} LIMIT 10""").print()
-        # t_env.execute("Test Kafka source")
-        aggregated_table = create_aggregated_pickup_sink(t_env)
+        aggregated_table = create_aggregated_tips_sink(t_env)
 
         sink_ddl = f"""
             INSERT INTO {aggregated_table}
             SELECT
                 window_start,
-                PU_location_id,
-                COUNT(*) AS num_trips
+                SUM(tip_amount) AS total_tips
             FROM TABLE(
-                TUMBLE(TABLE {source_table}, DESCRIPTOR(event_timestamp), INTERVAL '5' MINUTE)
+                TUMBLE(TABLE {source_table},
+                       DESCRIPTOR(event_timestamp),
+                       INTERVAL '1' HOUR
+                )
             )
-            GROUP BY window_start, PU_location_id;
+            GROUP BY window_start;
         """
         t_env.execute_sql(sink_ddl).wait()
 
